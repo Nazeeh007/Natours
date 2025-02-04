@@ -61,8 +61,16 @@ const ToursSchema = new mongoose.Schema(
     //   ref: 'User',
     //   required: [true, 'Please provide user'],
     // },
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
   //  , { timestamps: true }
 );
 
+//Virtual populate
+ToursSchema.virtual('durationsWeeks').get(function () {
+  return this.duration / 7;
+});
 module.exports = mongoose.model('Tours', ToursSchema);
