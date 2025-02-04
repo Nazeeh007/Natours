@@ -6,8 +6,9 @@ const {
   getTour,
   updateTour,
   deleteTour,
+  top5Tours,
 } = require('../controllers/tours');
-
+Router.route('/top-5-tour').get(top5Tours, getAllTours); //need to use middleware to get top 5 tours
 Router.route('/').get(getAllTours).post(createTour);
 // Router.get('/:id', getTour)
 //   .patch('/:id', updateTour)
