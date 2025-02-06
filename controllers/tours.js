@@ -6,6 +6,7 @@ const Tours = require('../models/tours');
 //async wrapper for error handling
 const asyncHandler = require('express-async-handler');
 const APIFeatures = require('./../utils/apiFeatures');
+const AppError = require('./../utils/appError');
 const top5Tours = asyncHandler(async (req, res, next) => {
   //setting them to hard-coded values
   req.query.limit = 5;
@@ -24,12 +25,6 @@ const getAllTours = asyncHandler(async (req, res) => {
     .pagination();
   const tours = await features.query;
 
-  if (!tours) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
-  }
   res.status(200).json({
     status: 'success',
     length: tours.length,
@@ -45,10 +40,7 @@ const getTour = asyncHandler(async (req, res) => {
   console.log(req.params.id);
   const tour = await Tours.findById(req.params.id);
   if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
+    return new AppError('Invalid ID', 404);
   }
   res.status(200).json({
     status: 'success',
@@ -58,12 +50,7 @@ const getTour = asyncHandler(async (req, res) => {
 
 const createTour = asyncHandler(async (req, res) => {
   const tour = await Tours.create(req.body);
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
-  }
+
   res.status(201).json({
     status: 'success',
     data: tour,
@@ -77,10 +64,7 @@ const updateTour = asyncHandler(async (req, res) => {
     runValidators: true,
   });
   if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
+    return new AppError('Invalid ID', 404);
   }
   res.status(200).json({
     status: 'success',
@@ -93,10 +77,7 @@ const updateTour = asyncHandler(async (req, res) => {
 const deleteTour = asyncHandler(async (req, res) => {
   const tour = await Tours.findByIdAndDelete(req.params.id);
   if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
+    return new AppError('Invalid ID', 404);
   }
   res.status(204).json({
     status: 'success',
