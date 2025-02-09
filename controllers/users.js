@@ -1,17 +1,63 @@
 const fs = require('fs');
 const tours = JSON.parse(fs.readFileSync('./dev-data/data/users.json'));
+const User = require('./../models/users');
+const asyncHandler = require('express-async-handler');
+const AppError = require('./../utils/appError');
+
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+  return newObj;
+};
+//@private
+const updateMe = asyncHandler(async (req, res, next) => {
+  //1) create error if user posts password data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError(
+        'This route is not for password updates. Please use /updatePassword',
+        400
+      )
+    );
+  }
+  //2) filtered out unwanted fields names that are not allowed to be updated by the user
+  //we have the user as we ran the protect middleware before using this route
+  const filteredBody = filterObj(req.body, 'name', 'email'); //to not make user update his role
+  //3) update user document
+  const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    //we are not updating the password so we can use findyidandupdate
+    new: true,
+    runValidators: true,
+  });
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser,
+    },
+  });
+});
+
+//@private
+const deleteMe = asyncHandler(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
 
 //get all users
 //@public
-const getAllUsers = (req, res) => {
+const getAllUsers = asyncHandler(async (req, res, next) => {
+  const users = await User.find();
   res.status(200).json({
     status: 'success',
-    createdAT: req.requestTime,
-    length: tours.length,
-    data: tours,
+    length: users.length,
+    data: { users },
   });
-  console.log(req.requestTime);
-};
+});
 
 //desc get single user
 //@public
@@ -115,4 +161,6 @@ module.exports = {
   updateUser,
   deleteUser,
   // checkID,
+  updateMe,
+  deleteMe,
 };
