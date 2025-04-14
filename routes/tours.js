@@ -9,22 +9,40 @@ const {
   top5Tours,
   getToursState,
   getMonthlyPlan,
+  getToursWithin,
+  getDistance,
 } = require('../controllers/tours');
 
 const {
   protect,
   restrictedRoutes,
 } = require('./../controllers/authController');
-
-Router.route('/monthly-plan/:year').get(getMonthlyPlan);
+// const {
+//   getAllReviews,
+//   createReview,
+// } = require('../controllers/reviewsController');
+const reviewsRouter = require('./../routes/reviewsRoutes');
+Router.use('/:tourId/reviews', reviewsRouter); //mounting the reviews router
+Router.route('/monthly-plan/:year').get(
+  protect,
+  restrictedRoutes('lead-guide', 'admin', 'guide'),
+  getMonthlyPlan
+);
 Router.route('/tour-stats').get(getToursState);
 Router.route('/top-5-tour').get(top5Tours, getAllTours); //need to use middleware to get top 5 tours
-Router.route('/').get(protect, getAllTours).post(createTour); //middleware to protect the route
+Router.route('/')
+  .get(getAllTours)
+  .post(protect, restrictedRoutes('lead-guide', 'admin'), createTour); //middleware to protect the route
 // Router.get('/:id', getTour)
 //   .patch('/:id', updateTour)
 //   .delete('/:id', deleteTour);
+Router.route('/tours-within/:distance/center/:latlng/unit/:unit').get(
+  getToursWithin
+);
+Router.route('/distances/:latlng/unit/:unit').get(getDistance);
 Router.route('/:id')
   .get(getTour)
-  .patch(updateTour)
+  .patch(protect, restrictedRoutes('lead-guide', 'admin'), updateTour)
   .delete(protect, restrictedRoutes('lead-guide', 'admin'), deleteTour);
+
 module.exports = Router;

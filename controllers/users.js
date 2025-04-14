@@ -3,6 +3,12 @@ const tours = JSON.parse(fs.readFileSync('./dev-data/data/users.json'));
 const User = require('./../models/users');
 const asyncHandler = require('express-async-handler');
 const AppError = require('./../utils/appError');
+const {
+  deleteOne,
+  updateOne,
+  getOne,
+  getAll,
+} = require('./../controllers/handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -50,31 +56,23 @@ const deleteMe = asyncHandler(async (req, res, next) => {
 
 //get all users
 //@public
-const getAllUsers = asyncHandler(async (req, res, next) => {
-  const users = await User.find();
-  res.status(200).json({
-    status: 'success',
-    length: users.length,
-    data: { users },
-  });
-});
+const getAllUsers = getAll(User); //using the getAll function from handlerFactory.js
+// const getAllUsers = asyncHandler(async (req, res, next) => {
+//   const users = await User.find();
+//   res.status(200).json({
+//     status: 'success',
+//     length: users.length,
+//     data: { users },
+//   });
+// });
 
+const getMe = (req, res, next) => {
+  req.params.id = req.user.id; //to get the current logged in user
+  next();
+};
 //desc get single user
 //@public
-const getUser = (req, res) => {
-  const id = Number(req.params.id);
-  const tour = tours.find((el) => el.id === id);
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
-  }
-  res.status(200).json({
-    status: 'success',
-    data: tour,
-  });
-};
+const getUser = getOne(User); //using the getOne function from handlerFactory
 
 //desc create new user
 //@public
@@ -96,52 +94,33 @@ const createUser = (req, res) => {
 
 //desc update user
 //@public
-const updateUser = (req, res) => {
-  const id = Number(req.params.id);
-  const tour = tours.find((el) => el.id === id);
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
-  }
-  const updatedTour = Object.assign(tour, req.body);
-  fs.writeFile(
-    '../dev-data/data/tours-simple.json',
-    JSON.stringify(tours),
-    (err) => {
-      res.status(200).json({
-        status: 'success',
-        data: updatedTour,
-      });
-    }
-  );
-};
+const updateUser = updateOne(User); //using the updateOne function from handlerFactory
+// const updateUser = (req, res) => {
+//   const id = Number(req.params.id);
+//   const tour = tours.find((el) => el.id === id);
+//   if (!tour) {
+//     return res.status(404).json({
+//       status: 'fail',
+//       message: 'Invalid ID',
+//     });
+//   }
+//   const updatedTour = Object.assign(tour, req.body);
+//   fs.writeFile(
+//     '../dev-data/data/tours-simple.json',
+//     JSON.stringify(tours),
+//     (err) => {
+//       res.status(200).json({
+//         status: 'success',
+//         data: updatedTour,
+//       });
+//     }
+//   );
+// };
 
 //desc delete user
 //@public
-const deleteUser = (req, res) => {
-  const id = Number(req.params.id);
-  const tour = tours.find((el) => el.id === id);
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'Invalid ID',
-    });
-  }
-  const index = tours.indexOf(tour);
-  tours.splice(index, 1);
-  fs.writeFile(
-    '../dev-data/data/tours-simple.json',
-    JSON.stringify(tours),
-    (err) => {
-      res.status(204).json({
-        status: 'success',
-        data: null,
-      });
-    }
-  );
-};
+
+const deleteUser = deleteOne(User); //using the deleteOne function from handlerFactory
 // const checkID = (req, res, next, val) => {
 //   const id = Number(req.params.id);
 //   console.log("the id is : " + id);
@@ -163,4 +142,5 @@ module.exports = {
   // checkID,
   updateMe,
   deleteMe,
+  getMe,
 };

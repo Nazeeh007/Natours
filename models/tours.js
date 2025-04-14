@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const validator = require('validator');
+// const User = reqiure('./users.js');
 const ToursSchema = new mongoose.Schema(
   {
     name: {
@@ -39,6 +40,7 @@ const ToursSchema = new mongoose.Schema(
       default: 4.5,
       max: [5, 'Rating must be below 5.0'],
       min: [1, 'Rating must be above 1.0'],
+      set: (val) => Math.round(val * 10) / 10, //4.6667 = 4.7
     },
     ratingsQuantity: {
       type: Number,
@@ -70,7 +72,7 @@ const ToursSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please provide a cover image'],
     },
-    image: [String],
+    images: [String],
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -81,6 +83,39 @@ const ToursSchema = new mongoose.Schema(
       default: false,
     },
     startDates: [Date],
+    //GeoJSON
+    startLocation: {
+      //GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number], //lat,lon array of numbers
+      address: String,
+      description: String,
+    },
+    locations: [
+      //embedded objects
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      //reference to user model child reference
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
     // createdBy: {
     //   type: mongoose.Types.ObjectId,
     //   ref: 'User',
@@ -93,10 +128,20 @@ const ToursSchema = new mongoose.Schema(
   }
   //  , { timestamps: true }
 );
-
+//Indexes
+ToursSchema.index({ price: 1, ratingsAverage: -1 }); //compound index
+ToursSchema.index({ slug: 1 }); //single index
+ToursSchema.index({ startLocation: '2dsphere' }); //geospatial index
 //Virtual populate
 ToursSchema.virtual('durationsWeeks').get(function () {
   return this.duration / 7;
+});
+//Virtual populate
+//parent child relationship
+ToursSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour', //foreign key(where the id is stored)
+  localField: '_id', //local key
 });
 //document middleware
 //happens before saving it to the database
@@ -108,6 +153,23 @@ ToursSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+//embedded documents (got the data of each tour guider but the bad in this that each time guide change anything in his data we should loop on
+// all the tours and update it)
+//guides = [
+// {
+//  name: 'John Doe',
+//  age: 30,},
+// {
+// name: 'Jane Doe',
+// age: 25,
+// },
+//]
+// ToursSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id)); //await return Promise so we need to deal with promise
+//   this.guides = await Promise.all(guidesPromises); //we use promise.all here because we have multiple promises
+//   next();
+// });
+
 //happens after saving it and before sending it to the database
 // ToursSchema.post('save', function (doc, next) {
 //   doc.name = this.difficulty;
@@ -119,14 +181,22 @@ ToursSchema.pre(/^find/, function (next) {
   this.start = Date.now();
   next();
 });
+//populate query middleware for guides
+ToursSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+  next();
+});
 ToursSchema.post(/^find/, function (docs, next) {
   console.log(`Query took ${Date.now() - this.start} milliseconds`);
   next();
 });
 //Aggregation middleware
-ToursSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { SecretTour: { $ne: true } } }); //unshift in the start shift in the end of pipeline
-  next();
-});
+// ToursSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { SecretTour: { $ne: true } } }); //unshift in the start shift in the end of pipeline
+//   next();
+// });
 
 module.exports = mongoose.model('Tours', ToursSchema);

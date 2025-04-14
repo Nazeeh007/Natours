@@ -79,6 +79,8 @@ const protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   // console.log('token', token);
   if (!token) {
@@ -108,6 +110,46 @@ const protect = asyncHandler(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+
+//isLoggedIn middleware
+
+const isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      // console.log('token', token);
+      //1) Verification token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      ); //change to promise object
+      //2) Check if user still exists
+      const currentUser = await User.findById(decoded.id); //check for user created and made a token then be deleted
+      if (!currentUser) {
+        return next();
+      }
+      //3) Check if user changed password after the token was issued
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+      //there is a logged in user
+      res.locals.user = currentUser; //this is a middleware, we can pass data to the next middleware
+      return next();
+    } catch (err) {
+      console.log(err.message);
+      return next();
+    }
+  }
+  next();
+};
+const logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: 'success',
+  });
+};
 const restrictedRoutes = (...roles) => {
   return (req, res, next) => {
     //roles ['admin', 'lead-guide'] role='user'
@@ -205,4 +247,6 @@ module.exports = {
   forgetPassword,
   resetPassword,
   updatePassword,
+  isLoggedIn,
+  logout,
 };

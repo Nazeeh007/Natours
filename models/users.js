@@ -52,12 +52,7 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 });
-//update the changeAt password property when we change the password
-userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next();
-  this.passwordChangedAt = Date.now() - 1000;
-  next();
-});
+
 //check if the password is correct
 userSchema.methods.correctPassword = async function (
   candidatePassword,
@@ -93,6 +88,12 @@ userSchema.methods.createPasswordResetToken = function () {
 
   return resetToken;
 };
+// update the changeAt password property when we change the password
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
 userSchema.pre('save', async function (next) {
   //only run this function if password was actually modified
   if (!this.isModified('password')) return next();

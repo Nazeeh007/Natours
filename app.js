@@ -1,9 +1,11 @@
 require('dotenv').config();
+const path = require('path');
 const rateLimit = require('express-rate-limit');
 const helmets = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 process.on('uncaughtException', (err) => {
   console.log(err.name, err.message);
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
@@ -11,12 +13,18 @@ process.on('uncaughtException', (err) => {
 });
 const express = require('express');
 const app = express();
+
 const morgan = require('morgan');
 //GLOBAL middleware
 //helmet
 //set security HTTP headers
 app.use(helmets());
 
+app.use(cookieParser());
+// app.use((req, res, next) => {
+//   console.log(req.cookies);
+//   next();
+// });
 //development logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -27,6 +35,9 @@ const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, //1hour
   message: 'Too many requests from this IP, please try again in an hour!',
 });
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views')); //set views directory
 app.use('/api', limiter); //any route start with /api
 //body parser reading data from body into req.body
 app.use(express.json());
@@ -56,12 +67,17 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRoutes = require('./routes/tours');
 const userRoutes = require('./routes/users');
+const reviewRoutes = require('./routes/reviewsRoutes');
+const viewRoutes = require('./routes/viewRouters');
 
 //db
 const connectDB = require('./db/connect');
+
 //Routers
+app.use('/', getTime, viewRoutes);
 app.use('/api/v1/tours', getTime, tourRoutes);
 app.use('/api/v1/users', getTime, userRoutes);
+app.use('/api/v1/reviews', getTime, reviewRoutes);
 //(*)use for all vers get/patch/delete/post routes
 app.all('*', (req, res, next) => {
   // res.status(404).json({
@@ -71,6 +87,7 @@ app.all('*', (req, res, next) => {
 
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
 //Global Error Handler
 app.use(globalErrorHandler);
 

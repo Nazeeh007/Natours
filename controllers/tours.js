@@ -7,6 +7,14 @@ const Tours = require('../models/tours');
 const asyncHandler = require('express-async-handler');
 const APIFeatures = require('./../utils/apiFeatures');
 const AppError = require('./../utils/appError');
+const {
+  deleteOne,
+  updateOne,
+  createOne,
+  getOne,
+  getAll,
+} = require('./../controllers/handlerFactory');
+
 const top5Tours = asyncHandler(async (req, res, next) => {
   //setting them to hard-coded values
   req.query.limit = 5;
@@ -15,75 +23,82 @@ const top5Tours = asyncHandler(async (req, res, next) => {
   next();
 });
 //get all tours
-//@public
-const getAllTours = asyncHandler(async (req, res) => {
-  //execute query
-  const features = new APIFeatures(Tours.find(), req.query)
-    .filter()
-    .sort()
-    .fields()
-    .pagination();
-  const tours = await features.query;
+//@public\
+const getAllTours = getAll(Tours); //using the getAll function from handlerFactory.js
+// const getAllTours = asyncHandler(async (req, res) => {
+//   //execute query
+//   const features = new APIFeatures(Tours.find(), req.query)
+//     .filter()
+//     .sort()
+//     .fields()
+//     .pagination();
+//   const tours = await features.query;
 
-  res.status(200).json({
-    status: 'success',
-    length: tours.length,
-    data: { tours },
-  });
-});
+//   res.status(200).json({
+//     status: 'success',
+//     length: tours.length,
+//     data: { tours },
+//   });
+// });
 
 //desc get single tour
 //@public
-const getTour = asyncHandler(async (req, res) => {
-  // const id = Number(req.params.id);
-  // const tour = Tours.findOne({ _id: req.params.id });
-  console.log(req.params.id);
-  const tour = await Tours.findById(req.params.id);
-  if (!tour) {
-    return new AppError('Invalid ID', 404);
-  }
-  res.status(200).json({
-    status: 'success',
-    data: tour,
-  });
-});
+const getTour = getOne(Tours, {
+  path: 'reviews' /*select : '-__V --ChangeAt'*/,
+}); //using the getOne function from handlerFactory.js
+// const getTour = asyncHandler(async (req, res) => {
+//   // const id = Number(req.params.id);
+//   // const tour = Tours.findOne({ _id: req.params.id });
+//   const tour = await Tours.findById(req.params.id).populate('reviews'); //parent child relationship
+//   if (!tour) {
+//     return new AppError('Invalid ID', 404);
+//   }
+//   res.status(200).json({
+//     status: 'success',
+//     data: tour,
+//   });
+// });
 
-const createTour = asyncHandler(async (req, res) => {
-  const tour = await Tours.create(req.body);
+const createTour = createOne(Tours); //using the createOne function from handlerFactory.js
+// const createTour = asyncHandler(async (req, res) => {
+//   const tour = await Tours.create(req.body);
 
-  res.status(201).json({
-    status: 'success',
-    data: tour,
-  });
-});
+//   res.status(201).json({
+//     status: 'success',
+//     data: tour,
+//   });
+// });
 //desc update tour
 //@public
-const updateTour = asyncHandler(async (req, res) => {
-  const tour = await Tours.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!tour) {
-    return new AppError('Invalid ID', 404);
-  }
-  res.status(200).json({
-    status: 'success',
-    data: tour,
-  });
-});
+const updateTour = updateOne(Tours); //using the updateOne function from handlerFactory.js
+// const updateTour = asyncHandler(async (req, res) => {
+//   const tour = await Tour s.findByIdAndUpdate(req.params.id, req.body, {
+//     new: true,
+//     runValidators: true,
+//   });
+//   if (!tour) {
+//     return new AppError('Invalid ID', 404);
+//   }
+//   res.status(200).json({
+//     status: 'success',
+//     data: tour,
+//   });
+// });
 
 //desc delete tour
 //@public
-const deleteTour = asyncHandler(async (req, res) => {
-  const tour = await Tours.findByIdAndDelete(req.params.id);
-  if (!tour) {
-    return new AppError('Invalid ID', 404);
-  }
-  res.status(204).json({
-    status: 'success',
-    msg: 'Deleted Successfully',
-  });
-});
+const deleteTour = deleteOne(Tours); //using the deleteOne function from handlerFactory.js
+// const deleteTour = asyncHandler(async (req, res) => {
+//   const tour = await Tours.findByIdAndDelete(req.params.id);
+//   if (!tour) {
+//     return new AppError('Invalid ID', 404);
+//   }
+//   res.status(204).json({
+//     status: 'success',
+//     msg: 'Deleted Successfully',
+//   });
+// });
+
 const getToursState = asyncHandler(async (req, res) => {
   const stats = await Tours.aggregate([
     {
@@ -166,6 +181,54 @@ const getMonthlyPlan = asyncHandler(async (req, res) => {
   });
 });
 
+//Router.route('/tours-within/:distance/center/:latlng/unit/:unit',getToursWithin);
+const getToursWithin = asyncHandler(async (req, res) => {
+  const { distance, latlng, unit } = req.params; //destructuring
+  const [lat, lng] = latlng.split(','); //split the latlng into lat and lng
+  if (!lat || !lng) {
+    return new AppError(
+      'Please provide lat and lng in the format lat,lng',
+      400
+    );
+  }
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; //miles or kilometers
+  const tours = await Tours.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+  });
+  res.status(200).json({
+    status: 'success',
+    length: tours.length,
+    data: { tours },
+  });
+});
+const getDistance = asyncHandler(async (req, res) => {
+  const { latlng, unit } = req.params; //destructuring
+  const [lat, lng] = latlng.split(','); //split the latlng into lat and lng
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001; //miles or kilometers
+  if (!lat || !lng) {
+    return new AppError(
+      'Please provide lat and lng in the format lat,lng',
+      400
+    );
+  }
+  const distances = await Tours.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1], //convert to numbers
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier,
+      },
+    },
+  ]);
+  res.status(200).json({
+    status: 'success',
+    data: { distances },
+  });
+});
+
 module.exports = {
   getAllTours,
   getTour,
@@ -175,6 +238,8 @@ module.exports = {
   top5Tours,
   getToursState,
   getMonthlyPlan,
+  getToursWithin,
+  getDistance,
 };
 
 //desc create new tour
