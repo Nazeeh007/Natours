@@ -13,6 +13,7 @@ const {
   deleteMe,
   getMe,
   uploadUserPhoto,
+  resizeUserPhoto,
 } = require('../controllers/users');
 const {
   signUp,
@@ -36,7 +37,7 @@ Router.use(protect);
 //updatePasswordController
 Router.route('/updatePassword').patch(updatePassword); //protected route as we must login first
 //userUpdateController
-Router.route('/updateMe').patch(uploadUserPhoto, updateMe);
+Router.route('/updateMe').patch(uploadUserPhoto, resizeUserPhoto, updateMe);
 Router.route('/deleteMe').delete(deleteMe);
 Router.route('/me').get(getMe, getUser); //get the user from the token
 

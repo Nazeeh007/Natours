@@ -5,17 +5,26 @@ const updateData = async (data, type) => {
         ? 'http://localhost:5000/api/v1/users/updatePassword'
         : 'http://localhost:5000/api/v1/users/updateMe';
 
-    const response = await fetch(url, {
+    const options = {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data), //fetch use body not data
       credentials: 'include', // Includes cookies in the request
-    });
+    };
 
+    // Don't set Content-Type for FormData (for file uploads)
+    // The browser will set it automatically with the correct boundary
+    if (data instanceof FormData) {
+      options.body = data;
+    } else {
+      options.headers = {
+        'Content-Type': 'application/json',
+      };
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(url, options);
     const responseData = await response.json();
 
+    console.log(responseData);
     if (responseData.status === 'success') {
       showAlert('success', `${type.toUpperCase()} updated successfully!`);
     } else {
@@ -31,10 +40,12 @@ const saveBtn = document.querySelector('.form-user-data');
 if (saveBtn) {
   saveBtn.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    console.log(name, email);
-    updateData({ name, email }, 'data');
+    const form = new FormData(); //to get the file from the form
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]); //to get the file from the form
+    // console.log(form.get('photo')); //to see the file name
+    updateData(form, 'data');
   });
 }
 const passwordBtn = document.querySelector('.form-user-password');

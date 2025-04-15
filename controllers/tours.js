@@ -7,6 +7,8 @@ const Tours = require('../models/tours');
 const asyncHandler = require('express-async-handler');
 const APIFeatures = require('./../utils/apiFeatures');
 const AppError = require('./../utils/appError');
+const multer = require('multer'); //uploading images
+const sharp = require('sharp'); //to resize the images
 const {
   deleteOne,
   updateOne,
@@ -14,6 +16,48 @@ const {
   getOne,
   getAll,
 } = require('./../controllers/handlerFactory');
+
+const multerStorage = multer.memoryStorage(); //to store the image in memory as buffer
+const multerFilter = (req, file, cb) => {
+  //to check if the file is an image or not
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true); //if the file is an image
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false); //if the file is not an image
+  }
+};
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+const uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+const resizeTourImages = asyncHandler(async (req, res, next) => {
+  if (!req.files.imageCover || !req.files.images) return next(); //if there is no file, we will not resize it
+  //1) cover image
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+  //2) images
+  req.body.images = []; //to store the images in an array
+  await Promise.all(
+    req.files.images.map(async (file, i) => {
+      const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+      await sharp(file.buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${filename}`);
+      req.body.images.push(filename); //push the filename to the array
+    })
+  );
+  next();
+});
 
 const top5Tours = asyncHandler(async (req, res, next) => {
   //setting them to hard-coded values
@@ -240,6 +284,8 @@ module.exports = {
   getMonthlyPlan,
   getToursWithin,
   getDistance,
+  uploadTourImages,
+  resizeTourImages,
 };
 
 //desc create new tour

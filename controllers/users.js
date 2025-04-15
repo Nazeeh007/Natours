@@ -4,25 +4,25 @@ const User = require('./../models/users');
 const asyncHandler = require('express-async-handler');
 const AppError = require('./../utils/appError');
 const multer = require('multer'); //uploading images
-// const upload = multer({ dest: 'public/img/users' });
-
+const sharp = require('sharp'); //to resize the images
 const {
   deleteOne,
   updateOne,
   getOne,
   getAll,
 } = require('./../controllers/handlerFactory');
-
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/img/users'); //where to store the image
-  },
-  filename: (req, file, cb) => {
-    //to create a unique name for the image
-    const ext = file.mimetype.split('/')[1]; //to get the extension of the image
-    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`); //to create a unique name for the image
-  },
-});
+// stored in disk storage
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users'); //where to store the image
+//   },
+//   filename: (req, file, cb) => {
+//     //to create a unique name for the image
+//     const ext = file.mimetype.split('/')[1]; //to get the extension of the image
+//     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`); //to create a unique name for the image
+//   },
+// });
+const multerStorage = multer.memoryStorage(); //to store the image in memory as buffer
 const multerFilter = (req, file, cb) => {
   //to check if the file is an image or not
   if (file.mimetype.startsWith('image')) {
@@ -38,6 +38,18 @@ const upload = multer({
 
 const uploadUserPhoto = upload.single('photo');
 
+const resizeUserPhoto = asyncHandler(async (req, res, next) => {
+  if (!req.file) return next(); //if there is no file, we will not resize it
+  //1) create a unique name for the image
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+  //2) resize the image
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+  next();
+}); //to resize the image
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach((el) => {
@@ -176,4 +188,5 @@ module.exports = {
   deleteMe,
   getMe,
   uploadUserPhoto,
+  resizeUserPhoto,
 };
