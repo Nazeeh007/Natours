@@ -3,12 +3,40 @@ const tours = JSON.parse(fs.readFileSync('./dev-data/data/users.json'));
 const User = require('./../models/users');
 const asyncHandler = require('express-async-handler');
 const AppError = require('./../utils/appError');
+const multer = require('multer'); //uploading images
+// const upload = multer({ dest: 'public/img/users' });
+
 const {
   deleteOne,
   updateOne,
   getOne,
   getAll,
 } = require('./../controllers/handlerFactory');
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/img/users'); //where to store the image
+  },
+  filename: (req, file, cb) => {
+    //to create a unique name for the image
+    const ext = file.mimetype.split('/')[1]; //to get the extension of the image
+    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`); //to create a unique name for the image
+  },
+});
+const multerFilter = (req, file, cb) => {
+  //to check if the file is an image or not
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true); //if the file is an image
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false); //if the file is not an image
+  }
+};
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+const uploadUserPhoto = upload.single('photo');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -19,6 +47,7 @@ const filterObj = (obj, ...allowedFields) => {
 };
 //@private
 const updateMe = asyncHandler(async (req, res, next) => {
+  // console.log(req.file); //to see the uploaded file
   //1) create error if user posts password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
@@ -31,6 +60,9 @@ const updateMe = asyncHandler(async (req, res, next) => {
   //2) filtered out unwanted fields names that are not allowed to be updated by the user
   //we have the user as we ran the protect middleware before using this route
   const filteredBody = filterObj(req.body, 'name', 'email'); //to not make user update his role
+  if (req.file) {
+    filteredBody.photo = req.file.filename; //to save the image name in the database
+  }
   //3) update user document
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     //we are not updating the password so we can use findyidandupdate
@@ -143,4 +175,5 @@ module.exports = {
   updateMe,
   deleteMe,
   getMe,
+  uploadUserPhoto,
 };

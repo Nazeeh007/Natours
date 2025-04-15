@@ -1,4 +1,5 @@
 const express = require('express');
+
 const Router = express.Router();
 
 const {
@@ -11,6 +12,7 @@ const {
   updateMe,
   deleteMe,
   getMe,
+  uploadUserPhoto,
 } = require('../controllers/users');
 const {
   signUp,
@@ -34,7 +36,7 @@ Router.use(protect);
 //updatePasswordController
 Router.route('/updatePassword').patch(updatePassword); //protected route as we must login first
 //userUpdateController
-Router.route('/updateMe').patch(updateMe);
+Router.route('/updateMe').patch(uploadUserPhoto, updateMe);
 Router.route('/deleteMe').delete(deleteMe);
 Router.route('/me').get(getMe, getUser); //get the user from the token
 
