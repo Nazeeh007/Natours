@@ -11,34 +11,6 @@ const showAlert = (type, message) => {
   window.setTimeout(hideAlert, 5000);
 };
 
-// const login = async (email, password) => {
-//   try {
-//     const res = await axios({
-//       method: 'POST',
-//       url: 'http://localhost:5000/api/v1/users/login',
-//       data: {
-//         email,
-//         password,
-//       },
-//       headers: {
-//         'Content-Security-Policy':
-//           "connect-src 'self' https://cdnjs.cloudflare.com",
-//       },
-//     });
-//     if (res.data.status === 'success') {
-//       console.log(res.data);
-//       showAlert('success', 'Logged in successfully');
-//       // alert('Logged in successfully');
-//       window.setTimeout(() => {
-//         location.assign('/');
-//       }, 1500);
-//       // return res.data;
-//     }
-//   } catch (err) {
-//     showAlert('error', err.response.data.message);
-//     // alert(err.response.data.message);
-//   }
-// };
 const login = async (email, password) => {
   try {
     const response = await fetch('http://localhost:5000/api/v1/users/login', {
@@ -54,15 +26,15 @@ const login = async (email, password) => {
     });
 
     const data = await response.json();
-
     if (data.status === 'success') {
       console.log(data);
       showAlert('success', 'Logged in successfully');
-      // alert('Logged in successfully');
       window.setTimeout(() => {
         location.assign('/');
       }, 1500);
       // return data;
+    } else {
+      showAlert('error', data.message || 'Login failed. Please try again.');
     }
   } catch (err) {
     // Since fetch doesn't reject on HTTP error status
@@ -75,7 +47,7 @@ const login = async (email, password) => {
   }
 };
 
-const sumbitBtn = document.querySelector('.form');
+const sumbitBtn = document.querySelector('.form--login');
 
 if (sumbitBtn) {
   sumbitBtn.addEventListener('submit', async (e) => {

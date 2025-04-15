@@ -108,6 +108,8 @@ const protect = asyncHandler(async (req, res, next) => {
   }
   //GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
+  res.locals.user = currentUser; //this is a middleware, we can pass data to the next middleware
+
   next();
 });
 

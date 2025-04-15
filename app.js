@@ -41,6 +41,7 @@ app.set('views', path.join(__dirname, 'views')); //set views directory
 app.use('/api', limiter); //any route start with /api
 //body parser reading data from body into req.body
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); //for parsing application/x-www-form-urlencoded
 //Data Sanitization against NoSQL query injection
 app.use(mongoSanitize()); //remove all dollar signs and dots from the req.body, req.query, req.params
 //Data Sanitization against XSS

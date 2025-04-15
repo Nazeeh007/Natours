@@ -1,6 +1,8 @@
 const Tour = require('../models/tours');
 const User = require('../models/users');
 const asyncHandler = require('express-async-handler');
+const AppError = require('./../utils/appError');
+
 exports.getOverview = asyncHandler(async (req, res, next) => {
   //1) Get tour data from collection
   const tours = await Tour.find();
@@ -21,7 +23,9 @@ exports.getTour = asyncHandler(async (req, res, next) => {
     fields: 'review rating user',
   });
   //   console.log(tour);
-
+  if (!tour) {
+    return next(new AppError('There is no tour with that name', 404));
+  }
   res.status(200).render('tour', {
     title: `${tour.name} Tour`,
     tour: tour,
@@ -45,3 +49,25 @@ exports.getSignup = (req, res) => {
     message: 'Welcome to the signup page',
   });
 };
+exports.getAccount = (req, res) => {
+  res.status(200).render('account', {
+    title: 'Your account',
+  });
+};
+exports.updateUserData = asyncHandler(async (req, res, next) => {
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(200).render('account', {
+    title: 'Your account',
+    user: updatedUser,
+  });
+});
