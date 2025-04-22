@@ -272,6 +272,40 @@ const getDistance = asyncHandler(async (req, res) => {
     data: { distances },
   });
 });
+const getSearchedTours = asyncHandler(async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query || query.length < 2) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Search query must be at least 2 characters',
+      });
+    }
+
+    const tours = await Tours.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { summary: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } },
+      ],
+    })
+      .select('name slug summary -_id')
+      .limit(5);
+
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: { tours },
+    });
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'An error occurred during search',
+    });
+  }
+});
 
 module.exports = {
   getAllTours,
@@ -286,6 +320,7 @@ module.exports = {
   getDistance,
   uploadTourImages,
   resizeTourImages,
+  getSearchedTours,
 };
 
 //desc create new tour

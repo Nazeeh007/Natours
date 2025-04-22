@@ -13,6 +13,7 @@ const {
   getDistance,
   uploadTourImages,
   resizeTourImages,
+  getSearchedTours,
 } = require('../controllers/tours');
 
 const {
@@ -35,6 +36,7 @@ Router.route('/top-5-tour').get(top5Tours, getAllTours); //need to use middlewar
 Router.route('/')
   .get(getAllTours)
   .post(protect, restrictedRoutes('lead-guide', 'admin'), createTour); //middleware to protect the route
+Router.route('/search').get(getSearchedTours); //searching tours by name
 // Router.get('/:id', getTour)
 //   .patch('/:id', updateTour)
 //   .delete('/:id', deleteTour);
