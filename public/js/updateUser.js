@@ -54,9 +54,9 @@ if (passwordBtn) {
     e.preventDefault();
     //
     document.querySelector('.btn--save-password').textContent = 'Updating...'; // Change button text to "Updating..."
-    const passwordCurrent = document.getElementById('password-current').value;
-    const password = document.getElementById('password').value;
-    const passwordConfirm = document.getElementById('password-confirm').value;
+    const passwordCurrent = document.getElementById('current-password').value;
+    const password = document.getElementById('new-password').value;
+    const passwordConfirm = document.getElementById('confirm-password').value;
     // console.log(passwordCurrent, password, passwordConfirm);
     await updateData(
       { passwordCurrent, password, passwordConfirm },
@@ -64,8 +64,8 @@ if (passwordBtn) {
     );
     // Clear the password fields after submission
     document.querySelector('.btn--save-password').textContent = 'Save Password'; // Change button text to "Updating..."
-    document.getElementById('password-current').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('password-confirm').value = '';
+    document.getElementById('current-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-password').value = '';
   });
 }

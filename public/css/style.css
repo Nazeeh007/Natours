@@ -1323,3 +1323,90 @@ body {
   -webkit-transform: translateY(-2px);
   transform: translateY(-2px);
 }
+/**/
+/* Main content area - ensures proper spacing below header */
+.main-content {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  min-height: 70vh;
+}
+
+/* Container wrapper to position the form */
+.password-container-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* The green background container */
+.password-change-container {
+  width: 40%;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 2rem;
+  background: linear-gradient(to bottom right, #7dd56f, #28b487);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading styles */
+.heading-password-change {
+  color: white;
+  text-align: center;
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+
+/* Form group styling */
+.form-group-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+/* Label styles */
+.form-label-centered {
+  text-align: center;
+  display: block;
+  color: white;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Input field styling */
+.input-field {
+  width: 70%;
+  padding: 0.7rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 2rem;
+}
+
+/* Button container */
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem; /* Increased from 1.5rem */
+}
+
+/* Save button styling */
+.save-password-button {
+  background-color: white;
+  color: #28b487;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-password-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}

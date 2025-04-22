@@ -1,0 +1,23 @@
+extends base
+
+block content
+    .main-content
+        .password-container-wrapper
+            .password-change-container
+                h2.heading-password-change PASSWORD CHANGE
+
+                form.password-form.form-user-password
+                    .form-group-centered
+                        label.form-label-centered(for='current-password') Current password
+                        input#current-password.input-field(type='password', placeholder='••••••••', required)
+
+                    .form-group-centered
+                        label.form-label-centered(for='new-password') New password
+                        input#new-password.input-field(type='password', placeholder='••••••••', required)
+
+                    .form-group-centered
+                        label.form-label-centered(for='confirm-password') Confirm password
+                        input#confirm-password.input-field(type='password', placeholder='••••••••', required)
+
+                    .button-container
+                        button.save-password-button.btn--save-password Save password

@@ -95,3 +95,10 @@ exports.getMyReviews = asyncHandler(async (req, res, next) => {
     reviews,
   });
 });
+exports.getMySetting = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).render('settings', {
+    title: 'My Settings',
+    user,
+  });
+});
