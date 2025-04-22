@@ -16,6 +16,9 @@ Router.get('/login', isLoggedIn, viewController.getLogin);
 Router.get('/signup', isLoggedIn, viewController.getSignup);
 Router.get('/me', protect, viewController.getAccount);
 Router.get('/my-tours', protect, viewController.getMyTours);
+Router.get('/my-reviews', protect, viewController.getMyReviews);
+Router.get('/my-setting', protect, viewController.getMySetting);
+
 // Router.post('/submit-user-data', protect, viewController.updateUserData); without using API
 
 module.exports = Router;

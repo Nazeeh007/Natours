@@ -1,6 +1,7 @@
 const Tour = require('../models/tours');
 const User = require('../models/users');
 const Booking = require('../models/booking');
+const Review = require('../models/reviews');
 const asyncHandler = require('express-async-handler');
 const AppError = require('./../utils/appError');
 
@@ -81,5 +82,16 @@ exports.getMyTours = asyncHandler(async (req, res, next) => {
   res.status(200).render('overview', {
     title: 'My Tours',
     tours,
+  });
+});
+
+exports.getMyReviews = asyncHandler(async (req, res, next) => {
+  const reviews = await Review.find({ user: req.user.id }).populate({
+    path: 'tour',
+  });
+  // console.log(reviews);
+  res.status(200).render('reviews', {
+    title: 'My Reviews',
+    reviews,
   });
 });
