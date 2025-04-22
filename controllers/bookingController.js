@@ -3,7 +3,13 @@ const AppError = require('./../utils/appError');
 const Tours = require('../models/tours');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); //import stripe and pass the secret key
 const Booking = require('../models/booking');
-
+const {
+  deleteOne,
+  updateOne,
+  createOne,
+  getOne,
+  getAll,
+} = require('./../controllers/handlerFactory');
 const getCheckoutSession = asyncHandler(async (req, res, next) => {
   const tour = await Tours.findById(req.params.tourId); //find the tour by id
   if (!tour) {
@@ -54,7 +60,18 @@ const createBookingCheckoutSession = asyncHandler(async (req, res, next) => {
   //re direct to the original url without query params
   res.redirect(req.originalUrl.split('?')[0]);
 });
+const createBooking = createOne(Booking);
+const getBooking = getOne(Booking);
+const getAllBookings = getAll(Booking);
+const updateBooking = updateOne(Booking);
+const deleteBooking = deleteOne(Booking);
+
 module.exports = {
   getCheckoutSession,
   createBookingCheckoutSession,
+  createBooking,
+  getBooking,
+  getAllBookings,
+  updateBooking,
+  deleteBooking,
 };

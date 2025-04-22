@@ -5,12 +5,23 @@ const {
   restrictedRoutes,
 } = require('./../controllers/authController');
 const {
-  getAllBookings,
-  getBooking,
+  getCheckoutSession,
   createBooking,
+  getBooking,
+  getAllBookings,
   updateBooking,
   deleteBooking,
-  getCheckoutSession,
 } = require('../controllers/bookingController');
 Router.route('/checkout-session/:tourId').get(protect, getCheckoutSession); //get checkout session for a specific tour
+//only admin and lead guid can do this crud
+Router.use(protect, restrictedRoutes('admin', 'lead-guide'));
+//CRUD for bookings
+Router.route('/')
+  .get(getAllBookings) //get all bookings
+  .post(createBooking); //create a booking
+Router.route('/:id')
+  .get(getBooking) //get a specific booking
+  .patch(updateBooking) //update a specific booking
+  .delete(deleteBooking); //delete a specific booking
+
 module.exports = Router;
