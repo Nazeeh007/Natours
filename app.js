@@ -63,6 +63,8 @@ app.use(
 );
 //serving static files
 app.use(express.static('./public'));
+// In your Express app setup
+
 const getTime = require('./middleware/getTime');
 //routes
 const AppError = require('./utils/appError');
@@ -70,16 +72,34 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRoutes = require('./routes/tours');
 const userRoutes = require('./routes/users');
 const reviewRoutes = require('./routes/reviewsRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 const viewRoutes = require('./routes/viewRouters');
 
 //db
 const connectDB = require('./db/connect');
-
+app.use((req, res, next) => {
+  // More permissive policy for development
+  if (process.env.NODE_ENV === 'development') {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';"
+    );
+  } else {
+    // Stricter policy for production
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' https://js.stripe.com; connect-src 'self' https://api.stripe.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; img-src 'self' https://*.stripe.com; font-src 'self' https://fonts.googleapis.com;"
+    );
+  }
+  next();
+});
 //Routers
 app.use('/', getTime, viewRoutes);
 app.use('/api/v1/tours', getTime, tourRoutes);
 app.use('/api/v1/users', getTime, userRoutes);
 app.use('/api/v1/reviews', getTime, reviewRoutes);
+app.use('/api/v1/bookings', getTime, bookingRoutes);
+
 //(*)use for all vers get/patch/delete/post routes
 app.all('*', (req, res, next) => {
   // res.status(404).json({

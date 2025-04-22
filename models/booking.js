@@ -24,7 +24,9 @@ const bookingSchema = new mongoose.Schema({
     default: true,
   },
 });
+//populate the user and tour fields with the name of the tour and user respectively
 bookingSchema.pre(/^find/, function (next) {
   this.populate('user').populate({ path: 'tour', select: 'name' }); //populate the tour field with the name of the tour
 });
-model.exports = mongoose.model('Booking', bookingSchema);
+
+module.exports = mongoose.model('Booking', bookingSchema);
